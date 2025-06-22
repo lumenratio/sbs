@@ -19,8 +19,8 @@ const (
 func parseTraining(data string) (int, string, time.Duration, error) {
 	parsedStr := strings.Split(data, ",")
 
-	if len(parsedStr) < 3 {
-		return 0, "", 0, fmt.Errorf("Spentclories: A string does not have enough data")
+	if len(parsedStr) != 3 {
+		return 0, "", 0, fmt.Errorf("Spentclories: A string does not have enough data or too big")
 	}
 
 	steps, err := strconv.Atoi(parsedStr[0])
@@ -32,8 +32,8 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	}
 
 	parsedDuration, err := time.ParseDuration(parsedStr[2])
-	if err != nil {
-		return 0, "", 0, err
+	if err != nil || parsedDuration <= 0 {
+		return 0, "", 0, fmt.Errorf("Wrong time duration")
 	}
 	return steps, parsedStr[1], parsedDuration, nil
 }
@@ -50,15 +50,15 @@ func meanSpeed(steps int, height float64, duration time.Duration) float64 {
 }
 
 func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	if steps <= 0 || duration <= 0 {
-		return 0, fmt.Errorf("Some parameters if wrong. Parameters must be bigger than zero")
+	if weight <= 0 || height <= 0 || steps <= 0 || duration <= 0 {
+		return 0, fmt.Errorf("Some parameters is wrong. Parameters must be bigger than zero")
 	}
 	return (weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH, nil
 }
 
 func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	if steps <= 0 || duration <= 0 {
-		return 0, fmt.Errorf("Some parameters if wrong. Parameters must be bigger than zero")
+	if weight <= 0 || height <= 0 || steps <= 0 || duration <= 0 {
+		return 0, fmt.Errorf("Some parameters is wrong. Parameters must be bigger than zero")
 	}
 	return ((weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH) * walkingCaloriesCoefficient, nil
 }
@@ -105,7 +105,7 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	resultSS[1] += strconv.FormatFloat(resultDuration, 'f', 2, 64) + " " + "ч."
 	resultSS[2] += strconv.FormatFloat(resultDistance, 'f', 2, 64) + " " + "км."
 	resultSS[3] += strconv.FormatFloat(resultSpeed, 'f', 2, 64) + " " + "км/ч"
-	resultSS[4] += strconv.FormatFloat(resultCalories, 'f', 2, 64)
+	resultSS[4] += strconv.FormatFloat(resultCalories, 'f', 2, 64) + "\n"
 
 	return strings.Join(resultSS, "\n"), nil
 }
