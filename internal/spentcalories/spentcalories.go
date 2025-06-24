@@ -20,7 +20,7 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	parsedStr := strings.Split(data, ",")
 
 	if len(parsedStr) != 3 {
-		return 0, "", 0, fmt.Errorf("Spentclories: A string does not have enough data or too big")
+		return 0, "", 0, fmt.Errorf("a string does not have enough data or too big")
 	}
 
 	steps, err := strconv.Atoi(parsedStr[0])
@@ -28,13 +28,16 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 		return 0, "", 0, err
 	}
 	if steps <= 0 {
-		return 0, "", 0, fmt.Errorf("Spentclories: The step count is zero or less")
+		return 0, "", 0, fmt.Errorf("the step count is zero or less")
 	}
 
 	parsedDuration, err := time.ParseDuration(parsedStr[2])
-	if err != nil || parsedDuration <= 0 {
-		return 0, "", 0, fmt.Errorf("Wrong time duration")
+	if err != nil {
+		return 0, "", 0, err
+	} else if parsedDuration <= 0 {
+		return 0, "", 0, fmt.Errorf("wrong time duration")
 	}
+
 	return steps, parsedStr[1], parsedDuration, nil
 }
 
@@ -50,15 +53,30 @@ func meanSpeed(steps int, height float64, duration time.Duration) float64 {
 }
 
 func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	if weight <= 0 || height <= 0 || steps <= 0 || duration <= 0 {
-		return 0, fmt.Errorf("Some parameters is wrong. Parameters must be bigger than zero")
+	switch {
+	case weight <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case height <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case steps <= 0:
+		return 0, fmt.Errorf("steps is zero or less") // useless check
+	case duration <= 0:
+		return 0, fmt.Errorf("duration is zero or less") // useless check again
 	}
+
 	return (weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH, nil
 }
 
 func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	if weight <= 0 || height <= 0 || steps <= 0 || duration <= 0 {
-		return 0, fmt.Errorf("Some parameters is wrong. Parameters must be bigger than zero")
+	switch {
+	case weight <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case height <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case steps <= 0:
+		return 0, fmt.Errorf("steps is zero or less") // useless check
+	case duration <= 0:
+		return 0, fmt.Errorf("duration is zero or less") // useless check again
 	}
 	return ((weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH) * walkingCaloriesCoefficient, nil
 }
@@ -75,12 +93,6 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 		resultDistance float64
 		resultSpeed    float64
 	)
-
-	resultSS := []string{"Тип тренировки: ",
-		"Длительность: ",
-		"Дистанция: ",
-		"Скорость: ",
-		"Сожгли калорий: "}
 
 	switch workout {
 	case "Ходьба":
@@ -101,11 +113,13 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	resultDistance = distance(steps, height)
 	resultSpeed = meanSpeed(steps, height, duration)
 
-	resultSS[0] += workout
-	resultSS[1] += strconv.FormatFloat(resultDuration, 'f', 2, 64) + " " + "ч."
-	resultSS[2] += strconv.FormatFloat(resultDistance, 'f', 2, 64) + " " + "км."
-	resultSS[3] += strconv.FormatFloat(resultSpeed, 'f', 2, 64) + " " + "км/ч"
-	resultSS[4] += strconv.FormatFloat(resultCalories, 'f', 2, 64) + "\n"
+	// Rewrote to use the Sprintf. It's ugly looks. Just ugly.
+	result := fmt.Sprintf(`Тип тренировки: %s
+Длительность: %.2f ч.
+Дистанция: %.2f км.
+Скорость: %.2f км/ч
+Сожгли калорий: %.2f
+`, workout, resultDuration, resultDistance, resultSpeed, resultCalories)
 
-	return strings.Join(resultSS, "\n"), nil
+	return result, nil
 }

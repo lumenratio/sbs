@@ -20,7 +20,7 @@ const (
 func parsePackage(data string) (int, time.Duration, error) {
 	parsedStr := strings.Split(data, ",")
 	if len(parsedStr) != 2 {
-		return 0, 0, fmt.Errorf("Daysteps: A string does not have enough data or too big")
+		return 0, 0, fmt.Errorf("a string does not have enough data or too big")
 	}
 
 	steps, err := strconv.Atoi(parsedStr[0])
@@ -28,24 +28,20 @@ func parsePackage(data string) (int, time.Duration, error) {
 		return 0, 0, err
 	}
 	if steps <= 0 {
-		return 0, 0, fmt.Errorf("Daysteps: The step count is zero or less")
+		return 0, 0, fmt.Errorf("the step count is zero or less")
 	}
 
 	parsedDuration, err := time.ParseDuration(parsedStr[1])
-	if parsedDuration <= 0 || err != nil {
-		return 0, 0, fmt.Errorf("Wrong time duration")
+	if err != nil {
+		return 0, 0, err
+	} else if parsedDuration <= 0 {
+		return 0, 0, fmt.Errorf("wrong time duration")
 	}
 
 	return steps, parsedDuration, nil
 }
 
 func DayActionInfo(data string, weight, height float64) string {
-	ss := []string{
-		"Количество шагов: ",
-		"Дистанция составила ",
-		"Вы сожгли ",
-	}
-
 	steps, training, err := parsePackage(data)
 	if err != nil {
 		log.Println(err)
@@ -59,9 +55,11 @@ func DayActionInfo(data string, weight, height float64) string {
 		return ""
 	}
 
-	ss[0] += strconv.Itoa(steps) + "."
-	ss[1] += strconv.FormatFloat(distanceKM, 'f', 2, 64) + " " + "км."
-	ss[2] += strconv.FormatFloat(calories, 'f', 2, 64) + " " + "ккал." + "\n"
+	// Rewrote to use the Sprintf. But it's looks like a shit: broken formatting, visually ugly.
+	result := fmt.Sprintf(`Количество шагов: %d.
+Дистанция составила %.2f км.
+Вы сожгли %.2f ккал.
+`, steps, distanceKM, calories)
 
-	return strings.Join(ss, "\n")
+	return result
 }
