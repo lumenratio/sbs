@@ -1,6 +1,9 @@
 package spentcalories
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -14,25 +17,108 @@ const (
 )
 
 func parseTraining(data string) (int, string, time.Duration, error) {
-	// TODO: реализовать функцию
+	parsedStr := strings.Split(data, ",")
+
+	if len(parsedStr) != 3 {
+		return 0, "", 0, fmt.Errorf("a string does not have enough data or too big")
+	}
+
+	steps, err := strconv.Atoi(parsedStr[0])
+	if err != nil {
+		return 0, "", 0, err
+	}
+	if steps <= 0 {
+		return 0, "", 0, fmt.Errorf("the step count is zero or less")
+	}
+
+	parsedDuration, err := time.ParseDuration(parsedStr[2])
+	if err != nil {
+		return 0, "", 0, err
+	}
+	if parsedDuration <= 0 {
+		return 0, "", 0, fmt.Errorf("wrong time duration")
+	}
+
+	return steps, parsedStr[1], parsedDuration, nil
 }
 
 func distance(steps int, height float64) float64 {
-	// TODO: реализовать функцию
+	return (float64(steps) * (height * stepLengthCoefficient)) / mInKm
 }
 
 func meanSpeed(steps int, height float64, duration time.Duration) float64 {
-	// TODO: реализовать функцию
-}
-
-func TrainingInfo(data string, weight, height float64) (string, error) {
-	// TODO: реализовать функцию
+	if duration <= 0 {
+		return 0
+	}
+	return distance(steps, height) / time.Duration(duration).Hours()
 }
 
 func RunningSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	// TODO: реализовать функцию
+	switch {
+	case weight <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case height <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case steps <= 0:
+		return 0, fmt.Errorf("steps is zero or less") // useless check
+	case duration <= 0:
+		return 0, fmt.Errorf("duration is zero or less") // useless check again
+	}
+
+	return (weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH, nil
 }
 
 func WalkingSpentCalories(steps int, weight, height float64, duration time.Duration) (float64, error) {
-	// TODO: реализовать функцию
+	switch {
+	case weight <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case height <= 0:
+		return 0, fmt.Errorf("weight is zero or less")
+	case steps <= 0:
+		return 0, fmt.Errorf("steps is zero or less") // useless check
+	case duration <= 0:
+		return 0, fmt.Errorf("duration is zero or less") // useless check again
+	}
+	return ((weight * meanSpeed(steps, height, duration) * time.Duration(duration).Minutes()) / minInH) * walkingCaloriesCoefficient, nil
+}
+
+func TrainingInfo(data string, weight, height float64) (string, error) {
+	steps, workout, duration, err := parseTraining(data)
+	if err != nil {
+		return "", err
+	}
+
+	var (
+		resultCalories float64
+		resultDuration float64
+		resultDistance float64
+		resultSpeed    float64
+	)
+
+	switch workout {
+	case "Ходьба":
+		resultCalories, err = WalkingSpentCalories(steps, weight, height, duration)
+		if err != nil {
+			return "", err
+		}
+	case "Бег":
+		resultCalories, err = RunningSpentCalories(steps, weight, height, duration)
+		if err != nil {
+			return "", err
+		}
+	default:
+		return "", fmt.Errorf("неизвестный тип тренировки")
+	}
+
+	resultDuration = time.Duration(duration).Hours()
+	resultDistance = distance(steps, height)
+	resultSpeed = meanSpeed(steps, height, duration)
+
+	// Rewrote to use the Sprintf. It's ugly looks. Just ugly.
+	result := fmt.Sprintf("Тип тренировки: %s\n"+
+		"Длительность: %.2f ч.\n"+
+		"Дистанция: %.2f км.\n"+
+		"Скорость: %.2f км/ч\n"+
+		"Сожгли калорий: %.2f\n", workout, resultDuration, resultDistance, resultSpeed, resultCalories)
+	return result, nil
 }
