@@ -34,7 +34,8 @@ func parsePackage(data string) (int, time.Duration, error) {
 	parsedDuration, err := time.ParseDuration(parsedStr[1])
 	if err != nil {
 		return 0, 0, err
-	} else if parsedDuration <= 0 {
+	}
+	if parsedDuration <= 0 {
 		return 0, 0, fmt.Errorf("wrong time duration")
 	}
 
@@ -42,24 +43,22 @@ func parsePackage(data string) (int, time.Duration, error) {
 }
 
 func DayActionInfo(data string, weight, height float64) string {
-	steps, training, err := parsePackage(data)
+	steps, trainDuration, err := parsePackage(data)
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
 
 	distanceKM := (float64(steps) * stepLength) / mInKm
-	calories, err := spentcalories.WalkingSpentCalories(steps, weight, height, training)
+	calories, err := spentcalories.WalkingSpentCalories(steps, weight, height, trainDuration)
 	if err != nil {
 		log.Println(err)
 		return ""
 	}
 
 	// Rewrote to use the Sprintf. But it's looks like a shit: broken formatting, visually ugly.
-	result := fmt.Sprintf(`Количество шагов: %d.
-Дистанция составила %.2f км.
-Вы сожгли %.2f ккал.
-`, steps, distanceKM, calories)
-
+	result := fmt.Sprintf("Количество шагов: %d.\n"+
+		"Дистанция составила %.2f км.\n"+
+		"Вы сожгли %.2f ккал.\n", steps, distanceKM, calories)
 	return result
 }

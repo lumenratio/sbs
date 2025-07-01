@@ -34,7 +34,8 @@ func parseTraining(data string) (int, string, time.Duration, error) {
 	parsedDuration, err := time.ParseDuration(parsedStr[2])
 	if err != nil {
 		return 0, "", 0, err
-	} else if parsedDuration <= 0 {
+	}
+	if parsedDuration <= 0 {
 		return 0, "", 0, fmt.Errorf("wrong time duration")
 	}
 
@@ -114,12 +115,10 @@ func TrainingInfo(data string, weight, height float64) (string, error) {
 	resultSpeed = meanSpeed(steps, height, duration)
 
 	// Rewrote to use the Sprintf. It's ugly looks. Just ugly.
-	result := fmt.Sprintf(`Тип тренировки: %s
-Длительность: %.2f ч.
-Дистанция: %.2f км.
-Скорость: %.2f км/ч
-Сожгли калорий: %.2f
-`, workout, resultDuration, resultDistance, resultSpeed, resultCalories)
-
+	result := fmt.Sprintf("Тип тренировки: %s\n"+
+		"Длительность: %.2f ч.\n"+
+		"Дистанция: %.2f км.\n"+
+		"Скорость: %.2f км/ч\n"+
+		"Сожгли калорий: %.2f\n", workout, resultDuration, resultDistance, resultSpeed, resultCalories)
 	return result, nil
 }
